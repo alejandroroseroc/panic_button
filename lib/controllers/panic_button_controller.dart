@@ -1,7 +1,11 @@
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../data/repositories/panic_button_repository.dart';
 import '../models/panic_button_model.dart';
+import 'settings_controller.dart';
+import 'alert_log_controller.dart';
 
 class PanicButtonController extends GetxController {
   final PanicButtonRepository _repo;
@@ -69,5 +73,30 @@ class PanicButtonController extends GetxController {
     } catch (e) {
       error.value = e.toString();
     }
+  }
+
+  /// Dispara la alerta: guarda log, llama contactos y servicios de emergencia.
+  Future<void> triggerAlert(PanicButtonModel btn) async {
+    // 1) Guardar log local y remoto
+    Get.find<AlertLogController>().logAlert(btn.id);
+
+    // 2) Leer settings
+    final settings = Get.find<SettingsController>().prefs.value;
+
+    // 3) Mensajes/llamadas a cada contacto
+    for (final contactId in btn.contactIds) {
+      // Aquí podrías recuperar el ContactModel por id si lo tienes en memoria
+      // y hacer algo como: launch('tel:${contact.phone}');
+    }
+
+    // 4) Emergencias
+    if (btn.alertToPolice) {
+      await launchUrl(Uri.parse('tel:911'));
+    }
+    if (btn.alertToAmbulance) {
+      await launchUrl(Uri.parse('tel:912'));
+    }
+
+    // 5) Notificaciones push, voz o shake: manejarlo en AlertLogController o SettingsController
   }
 }

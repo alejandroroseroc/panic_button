@@ -1,6 +1,7 @@
 // lib/data/repositories/auth_repository.dart
 
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart';
 
 class AuthRepository {
   final Account account;
@@ -44,5 +45,8 @@ class AuthRepository {
   Future<void> logout() async {
     // Borra la sesión actual
     await account.deleteSession(sessionId: 'current');
+  }
+  Future<User> getCurrentUser() {
+    return account.get(); // Appwrite devuelve un modelo User
   }
 }

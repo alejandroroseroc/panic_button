@@ -1,84 +1,64 @@
 // lib/presentation/pages/profile_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/contact_controller.dart';
-import '../../models/contact_model.dart';
-import '../../widgets/contact_tile.dart';
+import 'package:panic_button/presentation/pages/contact_screen.dart';
+import '../../controllers/auth_controller.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext ctx) {
-    final ctrl = Get.find<ContactController>();
+  Widget build(BuildContext context) {
+    final authCtrl = Get.find<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Mis Contactos')),
+      appBar: AppBar(title: const Text('Mi Perfil')),
       body: Obx(() {
-        if (ctrl.isLoading.value) return Center(child: CircularProgressIndicator());
-        if (ctrl.error.value.isNotEmpty) return Center(child: Text('Error: ${ctrl.error.value}'));
-        if (ctrl.contacts.isEmpty) return Center(child: Text('Aún no tienes contactos'));
+        if (authCtrl.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final user = authCtrl.user.value;
+        if (user == null) {
+          return const Center(child: Text('No se pudo cargar el perfil'));
+        }
 
-        return ListView(
-          children: ctrl.contacts.map((c) => ContactTile(
-            contact: c,
-            onEdit: () => _showEditDialog(ctx, ctrl, existing: c),
-            onDelete: () => ctrl.deleteContact(c.id),
-          )).toList(),
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _showEditDialog(ctx, ctrl),
-      ),
-    );
-  }
-
-  void _showEditDialog(BuildContext ctx, ContactController ctrl, {ContactModel? existing}) {
-    final nameCtrl  = TextEditingController(text: existing?.name);
-    final phoneCtrl = TextEditingController(text: existing?.phone);
-    bool whatsapp   = existing?.whatsapp ?? false;
-
-    showDialog(
-      context: ctx,
-      builder: (_) => StatefulBuilder(
-        builder: (c, setState) {
-          return AlertDialog(
-            title: Text(existing==null?'Nuevo Contacto':'Editar Contacto'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: nameCtrl,  decoration: InputDecoration(labelText:'Nombre')),
-                TextField(controller: phoneCtrl, decoration: InputDecoration(labelText:'Teléfono')),
-                CheckboxListTile(
-                  value: whatsapp,
-                  onChanged: (v)=>setState(()=>whatsapp=v!),
-                  title: Text('WhatsApp'),
-                  controlAffinity: ListTileControlAffinity.leading,
+        // Obtienes: user.name, user.email, user.$id
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.deepPurple,
+                child: Text(
+                  (user.name.isNotEmpty ? user.name[0] : '?').toUpperCase(),
+                  style: const TextStyle(fontSize: 40, color: Colors.white),
                 ),
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: ()=>Navigator.pop(c), child:Text('Cancelar')),
-              ElevatedButton(
-                onPressed: (){
-                  final model = ContactModel(
-                    id: existing?.id ?? '',
-                    name: nameCtrl.text.trim(),
-                    phone: phoneCtrl.text.trim(),
-                    whatsapp: whatsapp,
-                    userId: '', //controller lo rellena
-                  );
-                  if(existing==null) ctrl.addContact(model);
-                  else ctrl.updateContact(model);
-                  Navigator.pop(c);
+              ),
+              const SizedBox(height: 16),
+              Text(user.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(user.email, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+              const SizedBox(height: 8),
+              Text('ID: ${user.$id}', style: const TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 32),
+
+              ElevatedButton.icon(
+                onPressed: () {
+                  Get.to(() => const ContactsScreen());
                 },
-                child: Text(existing==null?'Crear':'Guardar'),
+                icon: const Icon(Icons.group),
+                label: const Text('Mis Contactos'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      }),
     );
   }
 }
