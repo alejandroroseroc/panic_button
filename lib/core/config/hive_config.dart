@@ -8,5 +8,6 @@ class HiveConfig {
     await Hive.openBox('panicButtonsBox');
     await Hive.openBox('contactsBox');
     await Hive.openBox('alertLogsBox');
+    await Hive.openBox('settingsBox'); 
   }
 }

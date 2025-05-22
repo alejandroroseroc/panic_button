@@ -3,7 +3,7 @@
 class PanicButtonModel {
   final String id;
   final String title;
-  final int color;
+  final int color; // Almacena ARGB completo
   final List<String> contactIds;
   final bool alertToPolice;
   final bool alertToAmbulance;
@@ -19,7 +19,7 @@ class PanicButtonModel {
     required this.userId,
   });
 
-  /// Este método te permite clonar la instancia cambiando sólo los campos que quieras.
+  /// Clona la instancia cambiando solo los campos que quieras.
   PanicButtonModel copyWith({
     String? id,
     String? title,
@@ -41,10 +41,13 @@ class PanicButtonModel {
   }
 
   factory PanicButtonModel.fromJson(Map<String, dynamic> json) {
+    final int rgb = json['color'] as int;
+    // Reintroduce canal alfa completo (0xFF) para visualización en Flutter
+    final int argb = 0xFF000000 | rgb;
     return PanicButtonModel(
       id: json['\$id'] as String,
       title: json['title'] as String,
-      color: json['color'] as int,
+      color: argb,
       contactIds: List<String>.from(json['contactIds'] ?? <String>[]),
       alertToPolice: json['alertToPolice'] as bool? ?? false,
       alertToAmbulance: json['alertToAmbulance'] as bool? ?? false,
@@ -54,7 +57,8 @@ class PanicButtonModel {
 
   Map<String, dynamic> toJson() => {
         'title': title,
-        'color': color,
+        // Enmascara el color: guarda solo RGB para que esté dentro del rango permitido
+        'color': color & 0x00FFFFFF,
         'contactIds': contactIds,
         'alertToPolice': alertToPolice,
         'alertToAmbulance': alertToAmbulance,
