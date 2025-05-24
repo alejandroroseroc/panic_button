@@ -3,9 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/config/appwrite_config.dart';
 import 'core/config/hive_config.dart';
+
+// Modelos Hive
+import 'models/message_template_model.dart';
 
 // Repositorios
 import 'data/repositories/auth_repository.dart';
@@ -13,6 +17,7 @@ import 'data/repositories/panic_button_repository.dart';
 import 'data/repositories/contact_repository.dart';
 import 'data/repositories/settings_repository.dart';
 import 'data/repositories/alert_log_repository.dart';
+import 'data/repositories/message_template_repository.dart';
 
 // Controladores
 import 'controllers/auth_controller.dart';
@@ -20,15 +25,22 @@ import 'controllers/panic_button_controller.dart';
 import 'controllers/contact_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'controllers/alert_log_controller.dart';
+import 'controllers/message_template_controller.dart';
 
-// Pantalla inicial
+// Pantallas
 import 'presentation/pages/splash_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 0) Inicializar Hive
+  // 0) Inicializar Hive y abrir cajas
+  await Hive.initFlutter();
+  // Registrar adaptadores
+  Hive.registerAdapter(MessageTemplateModelAdapter());
+  // Abrir cajas existentes
   await HiveConfig.initHive();
+  // Abrir nueva caja de plantillas
+  await Hive.openBox<MessageTemplateModel>('messageTemplatesBox');
 
   // 1) Inicializar Appwrite
   final client    = AppwriteConfig.initClient();
@@ -59,7 +71,12 @@ Future<void> main() async {
   Get.put(alertLogRepo);
   Get.put(AlertLogController(repo: alertLogRepo));
 
-  // 7) Arrancar la app
+  // 7) Inyección de Message Templates
+  final tmplRepo = MessageTemplateRepository();
+  Get.put(tmplRepo);
+  Get.put(MessageTemplateController(repo: tmplRepo));
+
+  // 8) Arrancar la app
   runApp(const MyApp());
 }
 

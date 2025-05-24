@@ -1,5 +1,6 @@
+// lib/data/repositories/panic_button_repository.dart
+
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
 import '../../core/constants/appwrite_constants.dart';
 import '../../models/panic_button_model.dart';
 
@@ -20,16 +21,15 @@ class PanicButtonRepository {
   }
 
   Future<PanicButtonModel> createButton(PanicButtonModel btn) async {
-    final currentUser = btn.userId;
     final doc = await _databases.createDocument(
       databaseId: AppwriteConstants.databaseId,
       collectionId: AppwriteConstants.collectionIdPB,
       documentId: ID.unique(),
       data: btn.toJson(),
       permissions: [
-        Permission.read(Role.user(currentUser)),
-        Permission.update(Role.user(currentUser)),
-        Permission.delete(Role.user(currentUser)),
+        Permission.read(Role.user(btn.userId)),
+        Permission.update(Role.user(btn.userId)),
+        Permission.delete(Role.user(btn.userId)),
       ],
     );
     return PanicButtonModel.fromJson(doc.data);
