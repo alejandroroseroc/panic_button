@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
@@ -35,11 +33,8 @@ Future<void> main() async {
 
   // 0) Inicializar Hive y abrir cajas
   await Hive.initFlutter();
-  // Registrar adaptadores
   Hive.registerAdapter(MessageTemplateModelAdapter());
-  // Abrir cajas existentes
   await HiveConfig.initHive();
-  // Abrir nueva caja de plantillas
   await Hive.openBox<MessageTemplateModel>('messageTemplatesBox');
 
   // 1) Inicializar Appwrite
@@ -71,8 +66,8 @@ Future<void> main() async {
   Get.put(alertLogRepo);
   Get.put(AlertLogController(repo: alertLogRepo));
 
-  // 7) Inyección de Message Templates
-  final tmplRepo = MessageTemplateRepository();
+  // 7) Inyección de Message Templates (ahora con parámetros)
+  final tmplRepo = MessageTemplateRepository(databases, account);
   Get.put(tmplRepo);
   Get.put(MessageTemplateController(repo: tmplRepo));
 

@@ -35,6 +35,7 @@ class MessageTemplateController extends GetxController {
     templates.removeWhere((e) => e.id == id);
   }
 
+  /// Diálogo para crear nueva plantilla
   void showAddDialog(BuildContext ctx) {
     final titleCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
@@ -57,6 +58,11 @@ class MessageTemplateController extends GetxController {
                 id: '',
                 title: titleCtrl.text,
                 content: contentCtrl.text,
+                userId: '',           // se rellena en repositorio
+                usedForPolice: false, // o valor por defecto
+                usedForAmbulance: false,
+                usedForContacts: true,
+                createdAt: DateTime.now(),
               ));
               Navigator.pop(ctx);
             },
@@ -67,6 +73,7 @@ class MessageTemplateController extends GetxController {
     );
   }
 
+  /// Diálogo para editar plantilla existente
   void showEditDialog(MessageTemplateModel t) {
     final titleCtrl = TextEditingController(text: t.title);
     final contentCtrl = TextEditingController(text: t.content);
@@ -85,7 +92,11 @@ class MessageTemplateController extends GetxController {
           TextButton(onPressed: () => Navigator.pop(Get.context!), child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () {
-              updateTemplate(t.copyWith(title: titleCtrl.text, content: contentCtrl.text));
+              updateTemplate(t.copyWith(
+                title: titleCtrl.text,
+                content: contentCtrl.text,
+                // puedes permitir editar también flags y createdAt si quieres
+              ));
               Navigator.pop(Get.context!);
             },
             child: const Text('Guardar'),
@@ -95,10 +106,10 @@ class MessageTemplateController extends GetxController {
     );
   }
 
-  /// Búsqueda manual con fallback
+  /// Obtiene el contenido de la plantilla por ID
   String getContent(String id) {
-    for (var t in templates) {
-      if (t.id == id) return t.content;
+    for (var tpl in templates) {
+      if (tpl.id == id) return tpl.content;
     }
     return templates.isNotEmpty ? templates.first.content : '';
   }

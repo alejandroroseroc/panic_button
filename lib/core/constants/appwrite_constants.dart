@@ -6,5 +6,7 @@ class AppwriteConstants {
   static const String collectionIdPB = '682a969100150e9947eb';  // <- tu colección panicButtons
   static const String collectionIdContacts = '682a97d4000cbae82e11';
   static const String collectionIdAlertLogs = '682a9863002cf9beff76';
+  static const String collectionIdmessageTemplates = '6832204b00387e0e2e71';
+
   
 }
