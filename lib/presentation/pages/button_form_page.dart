@@ -52,7 +52,7 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
     final contactCtrl = Get.find<ContactController>();
     final tmplCtrl    = Get.find<MessageTemplateController>();
 
-    // Sincroniza templateId
+    // Asegura que templateId siempre exista en la lista
     if (tmplCtrl.templates.isNotEmpty) {
       final exists = tmplCtrl.templates.any((t) => t.id == _templateId);
       if (!exists) {
@@ -65,9 +65,9 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.existing == null ? 'Nuevo Botón' : 'Editar Botón')),
-      // ---------------------------------------------
-      // Aquí aplicamos el degradado al fondo
+      appBar: AppBar(
+        title: Text(widget.existing == null ? 'Nuevo Botón' : 'Editar Botón'),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -78,14 +78,13 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            // Pon la caja del form en un Card semitransparente
-            Card(
-              color: Colors.white.withOpacity(0.9),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(children: [
+          child: Card(
+            color: Colors.white.withOpacity(0.9),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
                   // Título
                   TextField(
                     controller: _titleCtrl,
@@ -104,12 +103,15 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
                     child: const Text('Color', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(spacing: 12, children: [
-                    _buildColorCircle(0xFF2196F3),
-                    _buildColorCircle(0xFFF44336),
-                    _buildColorCircle(0xFF4CAF50),
-                    _buildColorCircle(0xFFFFC107),
-                  ]),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      _buildColorCircle(0xFF2196F3),
+                      _buildColorCircle(0xFFF44336),
+                      _buildColorCircle(0xFF4CAF50),
+                      _buildColorCircle(0xFFFFC107),
+                    ],
+                  ),
                   const Divider(height: 32),
 
                   // Contactos
@@ -207,7 +209,8 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
                         useShake: _useShake,
                         usePush: _usePush,
                         messageTemplateId: _templateId ?? '',
-                        userId: '',
+                        // <-- Aquí preservamos el userId existente:
+                        userId: widget.existing?.userId ?? '',
                       );
                       final panic = Get.find<PanicButtonController>();
                       if (widget.existing == null) panic.addButton(model);
@@ -216,10 +219,10 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
                     },
                     child: Text(widget.existing == null ? 'Crear' : 'Guardar'),
                   ),
-                ]),
+                ],
               ),
             ),
-          ]),
+          ),
         ),
       ),
     );

@@ -1,3 +1,5 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
@@ -66,7 +68,8 @@ Future<void> main() async {
   Get.put(alertLogRepo);
   Get.put(AlertLogController(repo: alertLogRepo));
 
-  // 7) Inyección de Message Templates (ahora con parámetros)
+  // 7) Inyección de Message Templates
+  //    Usa Appwrite para plantillas: pasamos databases y account
   final tmplRepo = MessageTemplateRepository(databases, account);
   Get.put(tmplRepo);
   Get.put(MessageTemplateController(repo: tmplRepo));
