@@ -1,7 +1,6 @@
 // lib/controllers/contact_controller.dart
 
 import 'package:get/get.dart';
-import 'package:appwrite/appwrite.dart';
 import '../data/repositories/contact_repository.dart';
 import '../models/contact_model.dart';
 

@@ -1,5 +1,3 @@
-// android/app/build.gradle.kts
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -9,15 +7,11 @@ plugins {
 android {
     namespace = "com.example.panic_button"
     compileSdk = flutter.compileSdkVersion
-
-    // Fija la NDK que necesitan los plugins
     ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-
-        // Activa desugar para coreLibraryDesugaring
         isCoreLibraryDesugaringEnabled = true
     }
 
@@ -41,7 +35,6 @@ android {
 }
 
 dependencies {
-    // Necesario para flutter_local_notifications y otros que requieran desugar
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
 

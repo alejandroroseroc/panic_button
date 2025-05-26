@@ -1,7 +1,6 @@
 // lib/data/repositories/message_template_repository.dart
 
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
 import '../../core/constants/appwrite_constants.dart';
 import '../../models/message_template_model.dart';
 

@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
@@ -10,6 +8,7 @@ import 'core/config/hive_config.dart';
 
 // Modelos Hive
 import 'models/message_template_model.dart';
+import 'models/alert_log_model.dart'; // 🛠 CAMBIO AQUÍ: importar el modelo para registrar el adapter
 
 // Repositorios
 import 'data/repositories/auth_repository.dart';
@@ -36,7 +35,10 @@ Future<void> main() async {
   // 0) Inicializar Hive y abrir cajas
   await Hive.initFlutter();
   Hive.registerAdapter(MessageTemplateModelAdapter());
-  await HiveConfig.initHive();
+  Hive.registerAdapter(AlertLogModelAdapter()); // 🛠 CAMBIO AQUÍ: registrar adapter
+
+  await HiveConfig.initHive(); // 🛠 CAMBIO AQUÍ: abrir alertLogsBox con tipo ya dentro
+
   await Hive.openBox<MessageTemplateModel>('messageTemplatesBox');
 
   // 1) Inicializar Appwrite
@@ -64,12 +66,11 @@ Future<void> main() async {
   Get.put(SettingsController(repo: settingsRepo));
 
   // 6) Inyección de AlertLog
-  final alertLogRepo = AlertLogRepository(databases);
+  final alertLogRepo = AlertLogRepository(databases, account);
   Get.put(alertLogRepo);
   Get.put(AlertLogController(repo: alertLogRepo));
 
   // 7) Inyección de Message Templates
-  //    Usa Appwrite para plantillas: pasamos databases y account
   final tmplRepo = MessageTemplateRepository(databases, account);
   Get.put(tmplRepo);
   Get.put(MessageTemplateController(repo: tmplRepo));

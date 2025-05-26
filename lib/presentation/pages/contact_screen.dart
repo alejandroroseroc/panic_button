@@ -69,8 +69,11 @@ class ContactsScreen extends StatelessWidget {
                     whatsapp: whatsapp,
                     userId: '', //controller lo rellena
                   );
-                  if(existing==null) ctrl.addContact(model);
-                  else ctrl.updateContact(model);
+                  if(existing==null) {
+                    ctrl.addContact(model);
+                  } else {
+                    ctrl.updateContact(model);
+                  }
                   Navigator.pop(c);
                 },
                 child: Text(existing==null?'Crear':'Guardar'),

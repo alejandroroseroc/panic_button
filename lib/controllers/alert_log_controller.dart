@@ -1,6 +1,7 @@
 // lib/controllers/alert_log_controller.dart
 
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/alert_log_model.dart';
 import '../data/repositories/alert_log_repository.dart';
 
@@ -25,5 +26,20 @@ class AlertLogController extends GetxController {
     await _repo.saveLocal(log);
     // 3) Guardar remoto
     await _repo.saveRemote(log);
+  }
+
+  /// Devuelve todos los logs locales (Hive).
+  Future<List<AlertLogModel>> fetchAllLocal() async {
+    final box = Hive.box<AlertLogModel>('alertLogsBox');
+    return box.values.toList();
+  }
+
+  /// Devuelve el último log local según el timestamp, o null si no hay ninguno.
+  Future<AlertLogModel?> getLast() async {
+    final box = Hive.box<AlertLogModel>('alertLogsBox');
+    if (box.isEmpty) return null;
+    final all = box.values.toList();
+    all.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return all.last;
   }
 }

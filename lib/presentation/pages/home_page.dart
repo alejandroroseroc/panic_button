@@ -1,18 +1,15 @@
-// lib/presentation/pages/home_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:panic_button/presentation/pages/contact_screen.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../controllers/panic_button_controller.dart';
-import '../../controllers/contact_controller.dart';
-import '../../models/panic_button_model.dart';
+import '../../presentation/pages/button_form_page.dart';
+import '../../presentation/pages/map_page.dart';
+import '../../presentation/pages/graph_page.dart';
+import '../../presentation/pages/profile_screen.dart';
+import '../../presentation/pages/settings_screen.dart';
 import '../../widgets/panic_button_card.dart';
-import 'button_form_page.dart';      // <-- Nueva página
-
-import 'profile_screen.dart';
-import 'settings_screen.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -23,7 +20,6 @@ class HomePage extends StatelessWidget {
     final panicCtrl = Get.find<PanicButtonController>();
 
     return Scaffold(
-      // ───── Drawer ─────
       drawer: Drawer(
         child: SafeArea(
           child: Column(
@@ -45,33 +41,57 @@ class HomePage extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('Perfil'),
-                onTap: () { Navigator.pop(context); Get.to(() => const ProfileScreen()); },
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.to(() => const ProfileScreen());
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.group),
                 title: const Text('Contactos'),
-                onTap: () { Navigator.pop(context); Get.to(() => const ContactsScreen()); },
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.to(() => const ContactsScreen());
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.map),
+                title: const Text('Mapa de Alertas'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.to(() => const MapPage());
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.bar_chart),
+                title: const Text('Estadísticas'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.to(() => const GraphPage());
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('Ajustes'),
-                onTap: () { Navigator.pop(context); Get.to(() => const SettingsScreen()); },
+                onTap: () {
+                  Navigator.pop(context);
+                  Get.to(() => const SettingsScreen());
+                },
               ),
             ],
           ),
         ),
       ),
-
-      // ───── AppBar ─────
       appBar: AppBar(
         title: const Text('Mis Botones de Pánico'),
         backgroundColor: Colors.deepPurple,
         actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: () => authCtrl.logout())
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => authCtrl.logout(),
+          )
         ],
       ),
-
-      // ───── Cuerpo con fondo degradado ─────
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -86,18 +106,12 @@ class HomePage extends StatelessWidget {
           }
           if (panicCtrl.error.value.isNotEmpty) {
             return Center(
-              child: Text(
-                'Error: ${panicCtrl.error.value}',
-                style: const TextStyle(color: Colors.red),
-              ),
+              child: Text('Error: ${panicCtrl.error.value}', style: const TextStyle(color: Colors.red)),
             );
           }
           if (panicCtrl.buttons.isEmpty) {
             return const Center(
-              child: Text(
-                'No tienes botones aún',
-                style: TextStyle(color: Colors.white70),
-              ),
+              child: Text('No tienes botones aún', style: TextStyle(color: Colors.white70)),
             );
           }
           return Padding(
@@ -105,30 +119,23 @@ class HomePage extends StatelessWidget {
             child: GridView.builder(
               itemCount: panicCtrl.buttons.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1,
+                crossAxisCount: 2, mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1
               ),
               itemBuilder: (_, i) {
                 final btn = panicCtrl.buttons[i];
                 return Stack(
                   children: [
-                    // Tap rápido: dispara alerta
-                    GestureDetector(
+                    // delegamos el tap directamente al card
+                    PanicButtonCard(
+                      button: btn,
                       onTap: () {
-                        if (btn.useButton) panicCtrl.triggerAlert(btn);
+                        debugPrint('>>> Botón pulsado: ${btn.title}');
+                        panicCtrl.triggerAlert(btn);
                       },
-                      child: PanicButtonCard(
-                        button: btn,
-                        onTap: () {},
-                        onDelete: () => panicCtrl.deleteButton(btn.id),
-                      ),
+                      onDelete: () => panicCtrl.deleteButton(btn.id),
                     ),
-                    // Icono editar → lleva al formulario
                     Positioned(
-                      bottom: 8,
-                      right: 8,
+                      bottom: 8, right: 8,
                       child: InkWell(
                         onTap: () => Get.to(() => ButtonFormPage(existing: btn)),
                         child: const Icon(Icons.edit, color: Colors.white70, size: 24),
@@ -141,8 +148,6 @@ class HomePage extends StatelessWidget {
           );
         }),
       ),
-
-      // ───── FAB Nuevo ─────
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Nuevo'),

@@ -1,17 +1,13 @@
-// lib/models/panic_button_model.dart
+enum CallTarget { none, police, ambulance, contact }
 
 class PanicButtonModel {
   final String id;
   final String title;
-  final int color; // ARGB completo
-  final List<String> contactIds;
-  final bool alertToPolice;
-  final bool alertToAmbulance;
-  final bool useButton;
-  final bool useVoice;
-  final bool useShake;
-  final bool usePush;
-  final String messageTemplateId;
+  final int color;                // ARGB completo
+  final List<String> contactIds;  // para SMS
+  final String messageTemplateId; // cuerpo del SMS
+  final String callContactId;     // si CallTarget.contact
+  final CallTarget callTarget;
   final String userId;
 
   PanicButtonModel({
@@ -19,13 +15,9 @@ class PanicButtonModel {
     required this.title,
     required this.color,
     required this.contactIds,
-    required this.alertToPolice,
-    required this.alertToAmbulance,
-    required this.useButton,
-    required this.useVoice,
-    required this.useShake,
-    required this.usePush,
-    required this.messageTemplateId,
+    this.messageTemplateId = '',
+    this.callContactId = '',
+    this.callTarget = CallTarget.none,
     required this.userId,
   });
 
@@ -34,13 +26,9 @@ class PanicButtonModel {
     String? title,
     int? color,
     List<String>? contactIds,
-    bool? alertToPolice,
-    bool? alertToAmbulance,
-    bool? useButton,
-    bool? useVoice,
-    bool? useShake,
-    bool? usePush,
     String? messageTemplateId,
+    String? callContactId,
+    CallTarget? callTarget,
     String? userId,
   }) {
     return PanicButtonModel(
@@ -48,13 +36,9 @@ class PanicButtonModel {
       title: title ?? this.title,
       color: color ?? this.color,
       contactIds: contactIds ?? this.contactIds,
-      alertToPolice: alertToPolice ?? this.alertToPolice,
-      alertToAmbulance: alertToAmbulance ?? this.alertToAmbulance,
-      useButton: useButton ?? this.useButton,
-      useVoice: useVoice ?? this.useVoice,
-      useShake: useShake ?? this.useShake,
-      usePush: usePush ?? this.usePush,
       messageTemplateId: messageTemplateId ?? this.messageTemplateId,
+      callContactId: callContactId ?? this.callContactId,
+      callTarget: callTarget ?? this.callTarget,
       userId: userId ?? this.userId,
     );
   }
@@ -62,18 +46,18 @@ class PanicButtonModel {
   factory PanicButtonModel.fromJson(Map<String, dynamic> json) {
     final rgb = json['color'] as int;
     final argb = 0xFF000000 | (rgb & 0x00FFFFFF);
+    final ct = CallTarget.values.firstWhere(
+      (e) => e.toString() == 'CallTarget.${json['callTarget']}',
+      orElse: () => CallTarget.none,
+    );
     return PanicButtonModel(
       id: json['\$id'] as String,
       title: json['title'] as String,
       color: argb,
       contactIds: List<String>.from(json['contactIds'] ?? <String>[]),
-      alertToPolice: json['alertToPolice'] as bool? ?? false,
-      alertToAmbulance: json['alertToAmbulance'] as bool? ?? false,
-      useButton: json['useButton'] as bool? ?? true,
-      useVoice: json['useVoice'] as bool? ?? false,
-      useShake: json['useShake'] as bool? ?? false,
-      usePush: json['usePush'] as bool? ?? false,
       messageTemplateId: json['messageTemplateId'] as String? ?? '',
+      callContactId: json['callContactId'] as String? ?? '',
+      callTarget: ct,
       userId: json['userId'] as String,
     );
   }
@@ -82,13 +66,9 @@ class PanicButtonModel {
         'title': title,
         'color': color & 0x00FFFFFF,
         'contactIds': contactIds,
-        'alertToPolice': alertToPolice,
-        'alertToAmbulance': alertToAmbulance,
-        'useButton': useButton,
-        'useVoice': useVoice,
-        'useShake': useShake,
-        'usePush': usePush,
         'messageTemplateId': messageTemplateId,
+        'callContactId': callContactId,
+        'callTarget': callTarget.toString().split('.').last,
         'userId': userId,
       };
 }

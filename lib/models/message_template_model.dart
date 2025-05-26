@@ -1,6 +1,5 @@
 // lib/models/message_template_model.dart
 
-import 'package:appwrite/models.dart';
 import 'package:hive/hive.dart';
 
 part 'message_template_model.g.dart';

@@ -1,13 +1,15 @@
+// lib/controllers/panic_button_controller.dart
+
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../data/repositories/panic_button_repository.dart';
 import '../models/panic_button_model.dart';
 import 'alert_log_controller.dart';
-import 'settings_controller.dart';
 import 'contact_controller.dart';
 import 'message_template_controller.dart';
-import '../models/contact_model.dart';
 
 class PanicButtonController extends GetxController {
   final PanicButtonRepository _repo;
@@ -77,38 +79,56 @@ class PanicButtonController extends GetxController {
     }
   }
 
-  /// Dispara la alerta: guarda log, envía WhatsApp y llama a emergencias.
+  /// 1) log  2) abre app de SMS con varios destinatarios  3) llamada única
   Future<void> triggerAlert(PanicButtonModel btn) async {
-    // 1) Log local y remoto
-    Get.find<AlertLogController>().logAlert(btn.id);
+    if (kDebugMode) print('🔥 triggerAlert para botón ${btn.id}');
 
-    // 2) Lógica de envío por WhatsApp
+    // 1) guardamos el log
+    await Get.find<AlertLogController>().logAlert(btn.id);
+
+    // 2) SMS grupal (abre la app de SMS)
     final contactCtrl = Get.find<ContactController>();
     final tmplCtrl    = Get.find<MessageTemplateController>();
 
-    final contacts = contactCtrl.contacts
+    final numbers = contactCtrl.contacts
         .where((c) => btn.contactIds.contains(c.id))
+        .map((c) => c.phone)
         .toList();
 
     final message = tmplCtrl.getContent(btn.messageTemplateId);
-
-    for (final c in contacts) {
-      final uri = Uri.parse(
-        'https://api.whatsapp.com/send?phone=${c.phone}&text=${Uri.encodeComponent(message)}'
+    if (numbers.isNotEmpty) {
+      final uri = Uri(
+        scheme: 'sms',
+        path: numbers.join(','),
+        queryParameters: {'body': message},
       );
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
+        if (kDebugMode) print('  -> Abriendo SMS Uri: $uri');
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar('Error', 'No se pudo abrir la aplicación de SMS');
       }
     }
 
-    // 3) Llamadas automáticas a emergencias
-    if (btn.alertToPolice) {
-      await launchUrl(Uri.parse('tel:911'));
+    // 3) llamada única
+    Uri? callUri;
+    switch (btn.callTarget) {
+      case CallTarget.police:
+        callUri = Uri.parse('tel:911');
+        break;
+      case CallTarget.ambulance:
+        callUri = Uri.parse('tel:912');
+        break;
+      case CallTarget.contact:
+        final target = contactCtrl.contacts
+            .firstWhereOrNull((c) => c.id == btn.callContactId);
+        if (target != null) callUri = Uri.parse('tel:${target.phone}');
+        break;
+      case CallTarget.none:
+        break;
     }
-    if (btn.alertToAmbulance) {
-      await launchUrl(Uri.parse('tel:912'));
+    if (callUri != null && await canLaunchUrl(callUri)) {
+      await launchUrl(callUri, mode: LaunchMode.externalApplication);
     }
-
-    // 4) Otras activaciones quedan en SettingsController si aplican
   }
 }
