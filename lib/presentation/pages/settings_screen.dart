@@ -8,7 +8,7 @@ import '../../controllers/panic_button_controller.dart';
 import '../../widgets/button_trigger_tile.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,60 +24,56 @@ class SettingsScreen extends StatelessWidget {
           final s = settingsCtrl.prefs.value;
           return ListView(
             children: [
-              // 1) Switch global: botón en pantalla
+              // Botón en pantalla (tap)
               SwitchListTile(
                 title: const Text('Botón en pantalla'),
+                subtitle: const Text('Dispara alertas al tocar'),
                 value: s.useButton,
                 onChanged: settingsCtrl.toggleButton,
               ),
 
-              // 2) Switch global: activar por voz
+              // Activar por voz
               SwitchListTile(
                 title: const Text('Activar por voz'),
-                subtitle: Text('Texto: "${s.alertText}"'),
+                subtitle: Text('Palabra: "${s.alertText}"'),
                 value: s.useVoice,
                 onChanged: settingsCtrl.toggleVoice,
               ),
               if (s.useVoice)
                 Padding(
-                  padding: const EdgeInsets.only(left: 16, bottom: 8),
+                  padding: const EdgeInsets.only(left: 16, bottom: 12),
                   child: TextField(
                     controller: TextEditingController(text: s.alertText),
-                    decoration: const InputDecoration(labelText: 'Texto de alerta'),
+                    decoration: const InputDecoration(
+                      labelText: 'Texto de alerta',
+                      border: OutlineInputBorder(),
+                    ),
                     onSubmitted: settingsCtrl.setCustomText,
                   ),
                 ),
 
-              // 3) Switch global: activar por sacudida
+              // Activar por sacudida
               SwitchListTile(
-                title: const Text('Activar por sacudida'),
+                title: const Text('Activar por shake'),
+                subtitle: const Text('Mueve el teléfono para disparar'),
                 value: s.useShake,
                 onChanged: settingsCtrl.toggleShake,
               ),
 
               const Divider(height: 32),
 
-              // 4) SMS templates (si ya lo tenías)
-              const Text(
-                'Plantillas de SMS',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              // Plantillas de SMS (si las usas)
+              const Text('Plantillas de SMS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               ...tmplCtrl.templates.map((t) => ListTile(
                     title: Text(t.title),
                     subtitle: Text(t.content),
                     trailing: Wrap(spacing: 8, children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => tmplCtrl.showEditDialog(t),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => tmplCtrl.deleteTemplate(t.id),
-                      ),
+                      IconButton(icon: const Icon(Icons.edit), onPressed: () => tmplCtrl.showEditDialog(t)),
+                      IconButton(icon: const Icon(Icons.delete), onPressed: () => tmplCtrl.deleteTemplate(t.id)),
                     ]),
                   )),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               ElevatedButton.icon(
                 icon: const Icon(Icons.add),
                 label: const Text('Nueva plantilla'),
@@ -86,11 +82,8 @@ class SettingsScreen extends StatelessWidget {
 
               const Divider(height: 32),
 
-              // 5) Métodos por botón
-              const Text(
-                'Métodos por botón',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              // Métodos por botón (tap/voice/shake)
+              const Text('Métodos por botón', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               ...panicCtrl.buttons.map((b) => ButtonTriggerTile(button: b)),
             ],

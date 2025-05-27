@@ -1,37 +1,48 @@
+// lib/widgets/button_trigger_tile.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../models/panic_button_model.dart';
 import '../controllers/settings_controller.dart';
+import '../models/panic_button_model.dart';
 
 enum TriggerMethod { tap, voice, shake }
 
 class ButtonTriggerTile extends StatelessWidget {
   final PanicButtonModel button;
-  const ButtonTriggerTile({super.key, required this.button});
+  const ButtonTriggerTile({Key? key, required this.button}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final settingsCtrl = Get.find<SettingsController>();
-    final triggers = settingsCtrl.getTriggers(button.id);
-    Widget _checkbox(String label, TriggerMethod method) {
-      final name = method.name;
-      final selected = triggers.contains(name);
-      return Row(mainAxisSize: MainAxisSize.min, children: [
-        Checkbox(
-          value: selected,
-          onChanged: (v) => settingsCtrl.toggleTrigger(button.id, name),
-        ),
-        Text(label),
-      ]);
+    final assigned = settingsCtrl.getTriggers(button.id);
+
+    Widget buildChip(String label, String method, Color color) {
+      final selected = assigned.contains(method);
+      return FilterChip(
+        label: Text(label),
+        selected: selected,
+        selectedColor: color.withOpacity(0.2),
+        checkmarkColor: color,
+        backgroundColor: Colors.grey.shade200,
+        labelStyle: TextStyle(color: selected ? color : Colors.black),
+        onSelected: (_) => settingsCtrl.toggleTrigger(button.id, method),
+      );
     }
 
-    return ListTile(
-      title: Text(button.title),
-      subtitle: Wrap(spacing: 12, children: [
-        _checkbox('Tap', TriggerMethod.tap),
-        _checkbox('Voz', TriggerMethod.voice),
-        _checkbox('Shake', TriggerMethod.shake),
-      ]),
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: ListTile(
+        leading: CircleAvatar(backgroundColor: Color(button.color)),
+        title: Text(button.title),
+        subtitle: Wrap(
+          spacing: 8,
+          children: [
+            buildChip('Tap', 'tap', Colors.blue),
+            buildChip('Voice', 'voice', Colors.green),
+            buildChip('Shake', 'shake', Colors.orange),
+          ],
+        ),
+      ),
     );
   }
 }

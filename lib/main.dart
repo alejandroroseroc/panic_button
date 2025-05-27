@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:panic_button/controllers/profile_controller.dart';
 import 'package:panic_button/models/settings_model.dart';
 
 import 'core/config/appwrite_config.dart';
@@ -54,6 +55,7 @@ Future<void> main() async {
   // 2) Auth
   Get.put(AuthRepository(account));
   Get.put(AuthController(Get.find()));
+  Get.put(ProfileController());
 
   // 3) PanicButton
   final panicRepo = PanicButtonRepository(databases);

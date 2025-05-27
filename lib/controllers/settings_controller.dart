@@ -1,6 +1,11 @@
+// lib/controllers/settings_controller.dart
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:panic_button/controllers/panic_button_controller.dart';
 import '../data/repositories/settings_repository.dart';
 import '../models/settings_model.dart';
+import 'package:collection/collection.dart';
 
 class SettingsController extends GetxController {
   final SettingsRepository _repo;
@@ -18,25 +23,54 @@ class SettingsController extends GetxController {
     prefs.value = await _repo.load();
   }
 
-  // Mantiene los switches globales
-  void toggleButton(bool v) => _update((p) => p.useButton = v);
-  void toggleVoice(bool v) => _update((p) => p.useVoice = v);
-  void toggleShake(bool v) => _update((p) => p.useShake = v);
+  // Global switches
+  void toggleButton(bool v)    => _update((p) => p.useButton = v);
+  void toggleVoice(bool v)     => _update((p) => p.useVoice = v);
+  void toggleShake(bool v)     => _update((p) => p.useShake = v);
   void setCustomText(String t) => _update((p) => p.alertText = t);
-  void togglePush(bool v) => _update((p) => p.pushNotifications = v);
+  void togglePush(bool v)      => _update((p) => p.pushNotifications = v);
 
-  // Métodos por botón
+  /// Obtiene la lista de métodos asignados a un botón
   List<String> getTriggers(String buttonId) {
     return prefs.value.buttonTriggers[buttonId] ?? <String>[];
   }
 
-  void toggleTrigger(String buttonId, String methodName) {
-    final map = prefs.value.buttonTriggers;
-    final list = List<String>.from(map[buttonId] ?? <String>[]);
-    if (list.contains(methodName)) list.remove(methodName);
-    else list.add(methodName);
-    map[buttonId] = list;
-    _update((p) => p.buttonTriggers = map);
+  /// Asigna/quita un método (tap/voice/shake) a un botón,
+  /// pero permite solo un botón con 'voice' y uno con 'shake'.
+  void toggleTrigger(String buttonId, String method) {
+    final model = prefs.value;
+    final triggers = Map<String, List<String>>.from(model.buttonTriggers);
+    final current = triggers[buttonId] ?? <String>[];
+
+    final isAdding = !current.contains(method);
+    if (isAdding && (method == 'voice' || method == 'shake')) {
+      // Si ya hay otro botón con ese método, bloqueamos
+      final conflict = triggers.entries
+          .firstWhereOrNull((e) => e.value.contains(method) && e.key != buttonId);
+      if (conflict != null) {
+        Get.snackbar(
+          '¡Ups!',
+          'Solo puedes asignar "$method" a un botón. Desasigna primero de "${_findTitle(conflict.key)}".',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.white,
+        );
+        return;
+      }
+    }
+
+    // Toggle en este botón
+    if (isAdding) current.add(method);
+    else current.remove(method);
+    triggers[buttonId] = current;
+
+    _update((p) => p.buttonTriggers = triggers);
+  }
+
+  /// Helper para obtener título de un botón por id
+  String _findTitle(String buttonId) {
+    final panicCtrl = Get.find<PanicButtonController>();
+    final btn = panicCtrl.buttons.firstWhereOrNull((b) => b.id == buttonId);
+    return btn?.title ?? 'otro botón';
   }
 
   void _update(void Function(SettingsModel) fn) {
