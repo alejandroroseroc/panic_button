@@ -33,7 +33,8 @@ dependencies:
 
   # Iconos
   cupertino_icons: ^1.0.8
-
+  sensors_plus: ^6.1.1
+  speech_to_text: ^7.0.0
 
 dev_dependencies:
   flutter_test:

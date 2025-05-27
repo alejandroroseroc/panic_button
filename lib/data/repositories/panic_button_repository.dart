@@ -4,7 +4,6 @@ import '../../models/panic_button_model.dart';
 
 class PanicButtonRepository {
   final Databases _databases;
-
   PanicButtonRepository(this._databases);
 
   Future<List<PanicButtonModel>> fetchButtons(String userId) async {
@@ -13,9 +12,7 @@ class PanicButtonRepository {
       collectionId: AppwriteConstants.collectionIdPB,
       queries: [Query.equal('userId', userId)],
     );
-    return res.documents
-        .map((d) => PanicButtonModel.fromJson(d.data))
-        .toList();
+    return res.documents.map((d) => PanicButtonModel.fromJson(d.data)).toList();
   }
 
   Future<PanicButtonModel> createButton(PanicButtonModel btn) async {

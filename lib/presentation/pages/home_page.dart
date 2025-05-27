@@ -125,7 +125,7 @@ class HomePage extends StatelessWidget {
                 final btn = panicCtrl.buttons[i];
                 return Stack(
                   children: [
-                    // delegamos el tap directamente al card
+                    // tarjeta tappable
                     PanicButtonCard(
                       button: btn,
                       onTap: () {
@@ -134,6 +134,7 @@ class HomePage extends StatelessWidget {
                       },
                       onDelete: () => panicCtrl.deleteButton(btn.id),
                     ),
+                    // editar
                     Positioned(
                       bottom: 8, right: 8,
                       child: InkWell(

@@ -2,6 +2,8 @@
     <!-- Permisos necesarios -->
     <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
 
     <!-- Permitir a url_launcher detectar apps sms: y tel: -->
     <queries>

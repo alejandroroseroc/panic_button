@@ -66,11 +66,7 @@ class PanicButtonCard extends StatelessWidget {
               ),
             ),
             if (callIcon != null)
-              Positioned(
-                bottom: 8,
-                left: 16,
-                child: callIcon,
-              ),
+              Positioned(bottom: 8, left: 16, child: callIcon),
             Positioned(
               top: 4,
               right: 4,

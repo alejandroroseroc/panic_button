@@ -1,14 +1,17 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:panic_button/models/settings_model.dart';
 
 import 'core/config/appwrite_config.dart';
 import 'core/config/hive_config.dart';
 
 // Modelos Hive
 import 'models/message_template_model.dart';
-import 'models/alert_log_model.dart'; // 🛠 CAMBIO AQUÍ: importar el modelo para registrar el adapter
+import 'models/alert_log_model.dart';
 
 // Repositorios
 import 'data/repositories/auth_repository.dart';
@@ -26,56 +29,80 @@ import 'controllers/settings_controller.dart';
 import 'controllers/alert_log_controller.dart';
 import 'controllers/message_template_controller.dart';
 
+// Servicios
+import 'services/shake_service.dart';
+import 'services/voice_service.dart';
+
 // Pantallas
 import 'presentation/pages/splash_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 0) Inicializar Hive y abrir cajas
+  // 0) Hive
   await Hive.initFlutter();
   Hive.registerAdapter(MessageTemplateModelAdapter());
-  Hive.registerAdapter(AlertLogModelAdapter()); // 🛠 CAMBIO AQUÍ: registrar adapter
-
-  await HiveConfig.initHive(); // 🛠 CAMBIO AQUÍ: abrir alertLogsBox con tipo ya dentro
-
+  Hive.registerAdapter(AlertLogModelAdapter());
+  await HiveConfig.initHive();
   await Hive.openBox<MessageTemplateModel>('messageTemplatesBox');
 
-  // 1) Inicializar Appwrite
+  // 1) Appwrite
   final client    = AppwriteConfig.initClient();
   final account   = Account(client);
   final databases = Databases(client);
 
-  // 2) Inyección de Auth
+  // 2) Auth
   Get.put(AuthRepository(account));
   Get.put(AuthController(Get.find()));
 
-  // 3) Inyección de PanicButton
+  // 3) PanicButton
   final panicRepo = PanicButtonRepository(databases);
   Get.put(panicRepo);
   Get.put(PanicButtonController(repo: panicRepo, account: account));
 
-  // 4) Inyección de Contacts
+  // 4) Contacts
   final contactRepo = ContactRepository(databases, account);
   Get.put(contactRepo);
   Get.put(ContactController(repo: contactRepo));
 
-  // 5) Inyección de Settings
+  // 5) Settings
   final settingsRepo = SettingsRepository();
   Get.put(settingsRepo);
-  Get.put(SettingsController(repo: settingsRepo));
+  final settingsCtrl = Get.put(SettingsController(repo: settingsRepo));
 
-  // 6) Inyección de AlertLog
+  // 6) AlertLog
   final alertLogRepo = AlertLogRepository(databases, account);
   Get.put(alertLogRepo);
   Get.put(AlertLogController(repo: alertLogRepo));
 
-  // 7) Inyección de Message Templates
+  // 7) Message Templates
   final tmplRepo = MessageTemplateRepository(databases, account);
   Get.put(tmplRepo);
   Get.put(MessageTemplateController(repo: tmplRepo));
 
-  // 8) Arrancar la app
+  // 8) Shake & Voice services + logs
+  final shakeSvc = ShakeService();
+  final voiceSvc = VoiceService();
+
+  ever<SettingsModel?>(settingsCtrl.prefs, (model) {
+    debugPrint('⚙️ Settings changed: useShake=${model?.useShake}, useVoice=${model?.useVoice}');
+    if (model?.useShake == true) {
+      debugPrint('▶️ Arrancando ShakeService');
+      shakeSvc.start();
+    } else {
+      debugPrint('⏹️ Deteniendo ShakeService');
+      shakeSvc.stop();
+    }
+    if (model?.useVoice == true) {
+      debugPrint('▶️ Arrancando VoiceService');
+      voiceSvc.start();
+    } else {
+      debugPrint('⏹️ Deteniendo VoiceService');
+      voiceSvc.stop();
+    }
+  });
+
+  // 9) Run app
   runApp(const MyApp());
 }
 
