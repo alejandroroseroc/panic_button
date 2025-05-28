@@ -2,6 +2,7 @@
 
 import 'package:get/get.dart';
 import 'package:appwrite/models.dart';
+import 'package:panic_button/controllers/panic_button_controller.dart';
 import '../data/repositories/auth_repository.dart';
 import '../presentation/pages/login_page.dart';
 import '../presentation/pages/home_page.dart';
@@ -50,12 +51,15 @@ class AuthController extends GetxController {
     }
   }
 
+  @override
   Future<void> login(String email, String password) async {
     isLoading.value = true;
     error.value = '';
     try {
       await _authRepository.login(email: email, password: password);
       await _loadCurrentUser();
+      // **AL LOGUEAR**: recarga los botones del nuevo usuario
+      Get.find<PanicButtonController>().loadButtons();
       Get.offAll(() => HomePage());
     } catch (e) {
       error.value = e.toString();
@@ -78,9 +82,12 @@ class AuthController extends GetxController {
     }
   }
 
+  @override
   Future<void> logout() async {
     await _authRepository.logout();
     user.value = null;
+    // **AL LOGOUT**: limpia la lista de botones
+    Get.find<PanicButtonController>().buttons.clear();
     Get.offAll(() => LoginPage());
   }
 }
