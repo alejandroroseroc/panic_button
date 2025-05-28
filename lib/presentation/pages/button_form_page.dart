@@ -36,7 +36,9 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
       _callContactId = e.callContactId;
     }
     final tmpl = Get.find<MessageTemplateController>().templates;
-    if (_templateId == null && tmpl.isNotEmpty) _templateId = tmpl.first.id;
+    if (_templateId == null && tmpl.isNotEmpty) {
+      _templateId = tmpl.first.id;
+    }
   }
 
   @override
@@ -46,11 +48,14 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
     final tmplCtrl    = Get.find<MessageTemplateController>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.existing == null ? 'Nuevo Botón' : 'Editar Botón')),
+      appBar: AppBar(
+        title: Text(widget.existing == null ? 'Nuevo Botón' : 'Editar Botón'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(children: [
@@ -62,15 +67,25 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
               const SizedBox(height: 16),
 
               // — Color
-              Text('Color', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Color',
+                      style: TextStyle(fontWeight: FontWeight.bold))),
               Wrap(
                 spacing: 12,
-                children: [0xFF2196F3, 0xFFF44336, 0xFF4CAF50, 0xFFFFC107]
+                children: [
+                  0xFF2196F3,
+                  0xFFF44336,
+                  0xFF4CAF50,
+                  0xFFFFC107
+                ]
                     .map((hex) => GestureDetector(
                           onTap: () => setState(() => _color = hex),
                           child: CircleAvatar(
                             backgroundColor: Color(hex),
-                            child: _color == hex ? Icon(Icons.check, color: Colors.white) : null,
+                            child: _color == hex
+                                ? const Icon(Icons.check, color: Colors.white)
+                                : null,
                           ),
                         ))
                     .toList(),
@@ -78,7 +93,10 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
               const Divider(height: 32),
 
               // — Método
-              Text('Método', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Método',
+                      style: TextStyle(fontWeight: FontWeight.bold))),
               ...AlertMethod.values.map((m) {
                 final labels = {
                   AlertMethod.sms: 'SMS',
@@ -95,22 +113,32 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
               const Divider(height: 32),
 
               // — Opciones SMS / WhatsApp
-              if (_method == AlertMethod.sms || _method == AlertMethod.whatsapp) ...[
-                // Plantilla
-                Text('Plantilla de mensaje', style: TextStyle(fontWeight: FontWeight.bold)),
+              if (_method == AlertMethod.sms ||
+                  _method == AlertMethod.whatsapp) ...[
+                const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Plantilla de mensaje',
+                        style: TextStyle(fontWeight: FontWeight.bold))),
                 if (tmplCtrl.templates.isNotEmpty)
                   DropdownButtonFormField<String>(
                     value: _templateId,
                     items: tmplCtrl.templates
-                        .map((t) => DropdownMenuItem(value: t.id, child: Text(t.title)))
+                        .map((t) => DropdownMenuItem(
+                              value: t.id,
+                              child: Text(t.title),
+                            ))
                         .toList(),
                     onChanged: (v) => setState(() => _templateId = v),
                   )
                 else
-                  const Text('Crea plantillas en Ajustes', style: TextStyle(color: Colors.red)),
+                  const Text('Crea plantillas en Ajustes',
+                      style: TextStyle(color: Colors.red)),
                 const SizedBox(height: 16),
-                // Contactos
-                Text('Contactos', style: TextStyle(fontWeight: FontWeight.bold)),
+
+                const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Contactos',
+                        style: TextStyle(fontWeight: FontWeight.bold))),
                 ...contactCtrl.contacts.map((c) {
                   final sel = _selectedContacts.contains(c.id);
                   return CheckboxListTile(
@@ -118,8 +146,11 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
                     subtitle: Text(c.phone),
                     value: sel,
                     onChanged: (v) => setState(() {
-                      if (v == true) _selectedContacts.add(c.id);
-                      else _selectedContacts.remove(c.id);
+                      if (v == true) {
+                        _selectedContacts.add(c.id);
+                      } else {
+                        _selectedContacts.remove(c.id);
+                      }
                     }),
                   );
                 }),
@@ -128,7 +159,10 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
 
               // — Opciones Llamada
               if (_method == AlertMethod.call) ...[
-                Text('Llamada a', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Llamada a',
+                        style: TextStyle(fontWeight: FontWeight.bold))),
                 ...CallTarget.values.map((ct) {
                   final labels = {
                     CallTarget.none: 'Ninguna',
@@ -146,15 +180,23 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
                     }),
                   );
                 }).toList(),
+
+                // Aquí mostramos **todos** los contactos disponibles
                 if (_callTarget == CallTarget.contact)
                   DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Elegir contacto'),
+                    decoration:
+                        const InputDecoration(labelText: 'Elegir contacto'),
+                    // Valor inicial: si editando, usamos existing; si no, primer contacto
                     value: _callContactId.isNotEmpty
                         ? _callContactId
-                        : (_selectedContacts.isNotEmpty ? _selectedContacts.first : null),
-                    items: _selectedContacts
-                        .map((id) => contactCtrl.contacts.firstWhere((c) => c.id == id))
-                        .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                        : (contactCtrl.contacts.isNotEmpty
+                            ? contactCtrl.contacts.first.id
+                            : null),
+                    items: contactCtrl.contacts
+                        .map((c) => DropdownMenuItem(
+                              value: c.id,
+                              child: Text(c.name),
+                            ))
                         .toList(),
                     onChanged: (v) => setState(() => _callContactId = v!),
                   ),
@@ -162,27 +204,31 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
               ],
 
               // — Botón Guardar
-              ElevatedButton(
-                onPressed: () {
-                  final model = PanicButtonModel(
-                    id: widget.existing?.id ?? '',
-                    title: _titleCtrl.text.trim(),
-                    color: _color,
-                    method: _method,
-                    contactIds: _selectedContacts,
-                    messageTemplateId: _templateId ?? '',
-                    callTarget: _callTarget,
-                    callContactId: _callContactId,
-                    userId: widget.existing?.userId ?? '',
-                  );
-                  if (widget.existing == null) {
-                    panicCtrl.addButton(model);
-                  } else {
-                    panicCtrl.updateButton(model);
-                  }
-                  Get.back();
-                },
-                child: Text(widget.existing == null ? 'Crear' : 'Guardar'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final model = PanicButtonModel(
+                      id: widget.existing?.id ?? '',
+                      title: _titleCtrl.text.trim(),
+                      color: _color,
+                      method: _method,
+                      contactIds: _selectedContacts,
+                      messageTemplateId: _templateId ?? '',
+                      callTarget: _callTarget,
+                      callContactId: _callContactId,
+                      userId: widget.existing?.userId ?? '',
+                    );
+                    if (widget.existing == null) {
+                      panicCtrl.addButton(model);
+                    } else {
+                      panicCtrl.updateButton(model);
+                    }
+                    Get.back();
+                  },
+                  child: Text(
+                      widget.existing == null ? 'Crear' : 'Guardar'),
+                ),
               ),
             ]),
           ),
