@@ -2,17 +2,19 @@
 
 import 'package:get/get.dart';
 import 'package:appwrite/models.dart';
-import 'package:panic_button/controllers/panic_button_controller.dart';
 import '../data/repositories/auth_repository.dart';
 import '../presentation/pages/login_page.dart';
 import '../presentation/pages/home_page.dart';
+import 'panic_button_controller.dart';
+import 'contact_controller.dart';
+import 'message_template_controller.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _authRepository;
 
   /// Indica si estamos cargando
   final RxBool isLoading = false.obs;
-  /// Error text
+  /// Texto de error
   final RxString error = ''.obs;
   /// Aquí guardamos el User de Appwrite
   final Rxn<User> user = Rxn<User>();
@@ -41,7 +43,9 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       final loggedIn = await _authRepository.isLoggedIn();
-      if (loggedIn) await _loadCurrentUser();
+      if (loggedIn) {
+        await _loadCurrentUser();
+      }
       return loggedIn;
     } catch (e) {
       error.value = e.toString();
@@ -51,15 +55,18 @@ class AuthController extends GetxController {
     }
   }
 
-  @override
   Future<void> login(String email, String password) async {
     isLoading.value = true;
     error.value = '';
     try {
       await _authRepository.login(email: email, password: password);
       await _loadCurrentUser();
-      // **AL LOGUEAR**: recarga los botones del nuevo usuario
+
+      // Después de login limpio y recargo datos de cada controlador
       Get.find<PanicButtonController>().loadButtons();
+      Get.find<ContactController>().fetchContacts();
+      Get.find<MessageTemplateController>().loadTemplates();
+
       Get.offAll(() => HomePage());
     } catch (e) {
       error.value = e.toString();
@@ -73,7 +80,11 @@ class AuthController extends GetxController {
     error.value = '';
     try {
       await _authRepository.createAccount(
-        email: email, password: password, name: name);
+        email: email,
+        password: password,
+        name: name,
+      );
+      // Tras registro, logueamos y cargamos user
       await login(email, password);
     } catch (e) {
       error.value = e.toString();
@@ -82,12 +93,29 @@ class AuthController extends GetxController {
     }
   }
 
-  @override
   Future<void> logout() async {
-    await _authRepository.logout();
-    user.value = null;
-    // **AL LOGOUT**: limpia la lista de botones
-    Get.find<PanicButtonController>().buttons.clear();
-    Get.offAll(() => LoginPage());
+    isLoading.value = true;
+    try {
+      await _authRepository.logout();
+      user.value = null;
+
+      // Limpio todas las colecciones en memoria
+      if (Get.isRegistered<PanicButtonController>()) {
+        Get.find<PanicButtonController>().buttons.clear();
+      }
+      if (Get.isRegistered<ContactController>()) {
+        Get.find<ContactController>().contacts.clear();
+      }
+      if (Get.isRegistered<MessageTemplateController>()) {
+        Get.find<MessageTemplateController>().templates.clear();
+      }
+
+      // Ahora vuelvo al login
+      Get.offAll(() => LoginPage());
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
   }
 }
