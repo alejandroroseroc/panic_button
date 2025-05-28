@@ -1,30 +1,41 @@
-// lib/presentation/pages/splash_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
-    _checkAuth(authController);
-    return Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
   }
 
-  void _checkAuth(AuthController authController) async {
+  Future<void> _checkAuth() async {
+    // Espera un segundo para que se vea el splash
     await Future.delayed(const Duration(seconds: 1));
-    final loggedIn = await authController.checkAuth();
+
+    final authCtrl = Get.find<AuthController>();
+    final loggedIn = await authCtrl.checkAuth();
+
     if (loggedIn) {
-      Get.off(() => HomePage());
+      Get.offAll(() => HomePage());
     } else {
-      Get.off(() => LoginPage());
+      Get.offAll(() => LoginPage());
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
   }
 }

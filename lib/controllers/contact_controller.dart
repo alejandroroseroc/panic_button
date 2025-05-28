@@ -1,5 +1,6 @@
 // lib/controllers/contact_controller.dart
 
+import 'package:appwrite/appwrite.dart';
 import 'package:get/get.dart';
 import '../data/repositories/contact_repository.dart';
 import '../models/contact_model.dart';
@@ -14,15 +15,18 @@ class ContactController extends GetxController {
   final error = ''.obs;
 
   @override
-  void onInit() {
-    super.onInit();
-    fetchContacts();
+  void onClose() {
+    contacts.clear();
+    super.onClose();
   }
 
   Future<void> fetchContacts() async {
     isLoading.value = true;
+    error.value = '';
     try {
       contacts.value = await _repo.fetchContacts();
+    } on AppwriteException catch (e) {
+      error.value = e.message ?? e.toString();
     } catch (e) {
       error.value = e.toString();
     } finally {

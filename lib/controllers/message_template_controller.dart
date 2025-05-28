@@ -1,3 +1,4 @@
+import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../data/repositories/message_template_repository.dart';
@@ -6,17 +7,30 @@ import '../models/message_template_model.dart';
 class MessageTemplateController extends GetxController {
   final MessageTemplateRepository _repo;
   var templates = <MessageTemplateModel>[].obs;
+  var isLoading = false.obs;
+  var error = ''.obs;
 
-  MessageTemplateController({required MessageTemplateRepository repo}) : _repo = repo;
+  MessageTemplateController({required MessageTemplateRepository repo})
+      : _repo = repo;
 
   @override
-  void onInit() {
-    super.onInit();
-    loadTemplates();
+  void onClose() {
+    templates.clear();
+    super.onClose();
   }
 
   Future<void> loadTemplates() async {
-    templates.value = await _repo.loadAll();
+    isLoading.value = true;
+    error.value = '';
+    try {
+      templates.value = await _repo.loadAll();
+    } on AppwriteException catch (e) {
+      error.value = e.message ?? e.toString();
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> createTemplate(MessageTemplateModel t) async {

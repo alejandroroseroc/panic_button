@@ -1,52 +1,42 @@
-// lib/controllers/auth_controller.dart
-
 import 'package:get/get.dart';
 import 'package:appwrite/models.dart';
+import 'package:appwrite/appwrite.dart';
 import '../data/repositories/auth_repository.dart';
 import '../presentation/pages/login_page.dart';
 import '../presentation/pages/home_page.dart';
-import 'panic_button_controller.dart';
-import 'contact_controller.dart';
-import 'message_template_controller.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _authRepository;
 
-  /// Indica si estamos cargando
+  /// Estado de carga
   final RxBool isLoading = false.obs;
-  /// Texto de error
+  /// Error de autenticación
   final RxString error = ''.obs;
-  /// Aquí guardamos el User de Appwrite
+  /// Usuario actual
   final Rxn<User> user = Rxn<User>();
 
   AuthController(this._authRepository);
 
-  @override
-  void onInit() {
-    super.onInit();
-    _loadCurrentUser();
-  }
-
-  Future<void> _loadCurrentUser() async {
-    isLoading.value = true;
-    try {
-      final u = await _authRepository.getCurrentUser();
-      user.value = u;
-    } catch (_) {
-      user.value = null;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
+  /// Chequea si hay sesión activa. Si devuelve true, carga el user en memoria.
   Future<bool> checkAuth() async {
     isLoading.value = true;
     try {
       final loggedIn = await _authRepository.isLoggedIn();
-      if (loggedIn) {
-        await _loadCurrentUser();
+      if (!loggedIn) {
+        return false;
       }
-      return loggedIn;
+      // Si está logueado, cargamos datos básicos del usuario
+      final u = await _authRepository.getCurrentUser();
+      user.value = u;
+      return true;
+    } on AppwriteException catch (e) {
+      // Si es 401, asumimos que no hay sesión
+      if (e.code == 401) {
+        return false;
+      }
+      // Otros errores los almacenamos para mostrar
+      error.value = e.message ?? e.toString();
+      return false;
     } catch (e) {
       error.value = e.toString();
       return false;
@@ -60,14 +50,14 @@ class AuthController extends GetxController {
     error.value = '';
     try {
       await _authRepository.login(email: email, password: password);
-      await _loadCurrentUser();
+      // Carga el usuario
+      final u = await _authRepository.getCurrentUser();
+      user.value = u;
 
-      // Después de login limpio y recargo datos de cada controlador
-      Get.find<PanicButtonController>().loadButtons();
-      Get.find<ContactController>().fetchContacts();
-      Get.find<MessageTemplateController>().loadTemplates();
-
+      // Navega al Home
       Get.offAll(() => HomePage());
+    } on AppwriteException catch (e) {
+      error.value = e.message ?? e.toString();
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -84,8 +74,10 @@ class AuthController extends GetxController {
         password: password,
         name: name,
       );
-      // Tras registro, logueamos y cargamos user
+      // Tras registro, logueamos al usuario
       await login(email, password);
+    } on AppwriteException catch (e) {
+      error.value = e.message ?? e.toString();
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -98,19 +90,6 @@ class AuthController extends GetxController {
     try {
       await _authRepository.logout();
       user.value = null;
-
-      // Limpio todas las colecciones en memoria
-      if (Get.isRegistered<PanicButtonController>()) {
-        Get.find<PanicButtonController>().buttons.clear();
-      }
-      if (Get.isRegistered<ContactController>()) {
-        Get.find<ContactController>().contacts.clear();
-      }
-      if (Get.isRegistered<MessageTemplateController>()) {
-        Get.find<MessageTemplateController>().templates.clear();
-      }
-
-      // Ahora vuelvo al login
       Get.offAll(() => LoginPage());
     } catch (e) {
       error.value = e.toString();

@@ -28,20 +28,24 @@ class PanicButtonController extends GetxController {
   var error = ''.obs;
 
   @override
-  void onInit() {
-    super.onInit();
-    loadButtons();
+  void onClose() {
+    buttons.clear();
+    super.onClose();
   }
 
   Future<void> loadButtons() async {
     isLoading.value = true;
+    error.value = '';
     try {
       final me = await _account.get();
       buttons.value = await _repo.fetchButtons(me.$id);
       if (kDebugMode) print('Loaded buttons: ${buttons.map((b) => b.id).toList()}');
+    } on AppwriteException catch (e) {
+      error.value = e.message ?? e.toString();
+      Get.snackbar('Error', 'No se pudieron cargar los botones: ${error.value}');
     } catch (e) {
       error.value = e.toString();
-      Get.snackbar('Error', 'No se pudieron cargar los botones: $e');
+      Get.snackbar('Error', 'No se pudieron cargar los botones: ${error.value}');
     } finally {
       isLoading.value = false;
     }

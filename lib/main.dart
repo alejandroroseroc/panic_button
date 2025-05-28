@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
@@ -48,8 +46,8 @@ Future<void> main() async {
   await Hive.openBox<MessageTemplateModel>('messageTemplatesBox');
 
   // 1) Appwrite
-  final client    = AppwriteConfig.initClient();
-  final account   = Account(client);
+  final client = AppwriteConfig.initClient();
+  final account = Account(client);
   final databases = Databases(client);
 
   // 2) Auth
@@ -85,23 +83,9 @@ Future<void> main() async {
   // 8) Shake & Voice services + logs
   final shakeSvc = ShakeService();
   final voiceSvc = VoiceService();
-
   ever<SettingsModel?>(settingsCtrl.prefs, (model) {
-    debugPrint('⚙️ Settings changed: useShake=${model?.useShake}, useVoice=${model?.useVoice}');
-    if (model?.useShake == true) {
-      debugPrint('▶️ Arrancando ShakeService');
-      shakeSvc.start();
-    } else {
-      debugPrint('⏹️ Deteniendo ShakeService');
-      shakeSvc.stop();
-    }
-    if (model?.useVoice == true) {
-      debugPrint('▶️ Arrancando VoiceService');
-      voiceSvc.start();
-    } else {
-      debugPrint('⏹️ Deteniendo VoiceService');
-      voiceSvc.stop();
-    }
+    if (model?.useShake == true) shakeSvc.start(); else shakeSvc.stop();
+    if (model?.useVoice == true) voiceSvc.start(); else voiceSvc.stop();
   });
 
   // 9) Run app
