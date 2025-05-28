@@ -1,5 +1,3 @@
-// lib/data/repositories/auth_repository.dart
-
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 
@@ -13,7 +11,6 @@ class AuthRepository {
     required String password,
     required String name,
   }) async {
-    // Registra el usuario en Appwrite
     await account.create(
       userId: ID.unique(),
       email: email,
@@ -26,7 +23,6 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    // Crea sesión con email+password
     await account.createEmailPasswordSession(
       email: email,
       password: password,
@@ -35,7 +31,7 @@ class AuthRepository {
 
   Future<bool> isLoggedIn() async {
     try {
-      await account.get();         // Si no está logueado lanza excepción
+      await account.get();
       return true;
     } catch (_) {
       return false;
@@ -43,10 +39,38 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
-    // Borra la sesión actual
     await account.deleteSession(sessionId: 'current');
   }
+
   Future<User> getCurrentUser() {
-    return account.get(); // Appwrite devuelve un modelo User
+    return account.get();
+  }
+
+  // ——— Nuevos métodos ———
+
+  Future<User> updateName(String name) {
+    return account.updateName(name: name);
+  }
+
+  Future<User> updateEmail(String email, String password) {
+    // Appwrite pide password actual para cambiar email
+    return account.updateEmail(
+      email: email,
+      password: password,
+    );
+  }
+
+  Future<void> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) {
+    return account.updatePassword(
+      password: newPassword,
+      oldPassword: oldPassword,
+    );
+  }
+
+  Future<User> updatePrefs({ required Map<String, dynamic> prefs }) {
+    return account.updatePrefs(prefs: prefs);
   }
 }
