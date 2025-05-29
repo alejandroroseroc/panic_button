@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:panic_button/presentation/pages/contact_screen.dart';
 import '../../controllers/panic_button_controller.dart';
 import '../../controllers/contact_controller.dart';
 import '../../controllers/message_template_controller.dart';
 import '../../models/panic_button_model.dart';
+
+// Importa directamente las páginas a las que quieres navegar
+import '../pages/settings_screen.dart'; // Asegúrate de que esta ruta sea correcta
+import '../pages/profile_screen.dart';   // Esta es tu ContactsScreen
 
 class ButtonFormPage extends StatefulWidget {
   final PanicButtonModel? existing;
@@ -119,41 +124,83 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
                     alignment: Alignment.centerLeft,
                     child: Text('Plantilla de mensaje',
                         style: TextStyle(fontWeight: FontWeight.bold))),
-                if (tmplCtrl.templates.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    value: _templateId,
-                    items: tmplCtrl.templates
-                        .map((t) => DropdownMenuItem(
-                              value: t.id,
-                              child: Text(t.title),
-                            ))
-                        .toList(),
-                    onChanged: (v) => setState(() => _templateId = v),
-                  )
-                else
-                  const Text('Crea plantillas en Ajustes',
-                      style: TextStyle(color: Colors.red)),
+                Obx(() => tmplCtrl.templates.isNotEmpty
+                    ? DropdownButtonFormField<String>(
+                        value: _templateId,
+                        items: tmplCtrl.templates
+                            .map((t) => DropdownMenuItem(
+                                  value: t.id,
+                                  child: Text(t.title),
+                                ))
+                            .toList(),
+                        onChanged: (v) => setState(() => _templateId = v),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'No hay plantillas de mensaje creadas.',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: const Text('Crear plantilla en Ajustes'),
+                              onPressed: () {
+                                // CAMBIO AQUÍ: Usamos Get.to() directamente
+                                Get.to(() => const SettingsScreen());
+                              },
+                            ),
+                          ),
+                        ],
+                      )),
                 const SizedBox(height: 16),
 
                 const Align(
                     alignment: Alignment.centerLeft,
                     child: Text('Contactos',
                         style: TextStyle(fontWeight: FontWeight.bold))),
-                ...contactCtrl.contacts.map((c) {
-                  final sel = _selectedContacts.contains(c.id);
-                  return CheckboxListTile(
-                    title: Text(c.name),
-                    subtitle: Text(c.phone),
-                    value: sel,
-                    onChanged: (v) => setState(() {
-                      if (v == true) {
-                        _selectedContacts.add(c.id);
-                      } else {
-                        _selectedContacts.remove(c.id);
-                      }
-                    }),
-                  );
-                }),
+                Obx(() => contactCtrl.contacts.isNotEmpty
+                    ? Column(
+                        children: contactCtrl.contacts.map((c) {
+                          final sel = _selectedContacts.contains(c.id);
+                          return CheckboxListTile(
+                            title: Text(c.name),
+                            subtitle: Text(c.phone),
+                            value: sel,
+                            onChanged: (v) => setState(() {
+                              if (v == true) {
+                                _selectedContacts.add(c.id);
+                              } else {
+                                _selectedContacts.remove(c.id);
+                              }
+                            }),
+                          );
+                        }).toList(),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'No hay contactos creados.',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.person_add),
+                              label: const Text('Crear contacto'),
+                              onPressed: () {
+                                // CAMBIO AQUÍ: Usamos Get.to() directamente
+                                Get.to(() => const ContactsScreen());
+                              },
+                            ),
+                          ),
+                        ],
+                      )),
                 const Divider(height: 32),
               ],
 
@@ -183,23 +230,45 @@ class _ButtonFormPageState extends State<ButtonFormPage> {
 
                 // Aquí mostramos **todos** los contactos disponibles
                 if (_callTarget == CallTarget.contact)
-                  DropdownButtonFormField<String>(
-                    decoration:
-                        const InputDecoration(labelText: 'Elegir contacto'),
-                    // Valor inicial: si editando, usamos existing; si no, primer contacto
-                    value: _callContactId.isNotEmpty
-                        ? _callContactId
-                        : (contactCtrl.contacts.isNotEmpty
-                            ? contactCtrl.contacts.first.id
-                            : null),
-                    items: contactCtrl.contacts
-                        .map((c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Text(c.name),
-                            ))
-                        .toList(),
-                    onChanged: (v) => setState(() => _callContactId = v!),
-                  ),
+                  Obx(() => contactCtrl.contacts.isNotEmpty
+                      ? DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                              labelText: 'Elegir contacto'),
+                          // Valor inicial: si editando, usamos existing; si no, primer contacto
+                          value: _callContactId.isNotEmpty
+                              ? _callContactId
+                              : (contactCtrl.contacts.isNotEmpty
+                                  ? contactCtrl.contacts.first.id
+                                  : null),
+                          items: contactCtrl.contacts
+                              .map((c) => DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(c.name),
+                                  ))
+                              .toList(),
+                          onChanged: (v) => setState(() => _callContactId = v!),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'No hay contactos creados para elegir.',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.person_add),
+                                label: const Text('Crear contacto'),
+                                onPressed: () {
+                                  // CAMBIO AQUÍ: Usamos Get.to() directamente
+                                  Get.to(() => const ContactsScreen());
+                                },
+                              ),
+                            ),
+                          ],
+                        )),
                 const Divider(height: 32),
               ],
 
